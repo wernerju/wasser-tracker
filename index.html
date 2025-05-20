@@ -176,6 +176,28 @@
                 max-width: 100%;
             }
         }
+
+        /* Verbesserungen für kleine Bildschirme (z.B. iPhone) */
+        @media (max-width: 400px) {
+            #calendar .day {
+                padding: 12px; /* Vergrößert den Padding der Zellen */
+                font-size: 18px; /* Vergrößert die Schriftgröße der Tageszahlen */
+            }
+            #calendar .day select {
+                font-size: 18px; /* Vergrößert die Schriftgröße im Dropdown-Menü */
+                height: 40px; /* Erhöht die Höhe des Dropdown-Menüs */
+                margin-top: 10px; /* Vergrößert den Abstand zum Tag */
+            }
+            #month-year-select select {
+                font-size: 18px;  /* Vergrößert die Schriftgröße der Monats- und Jahresauswahl */
+                padding: 12px;
+                height: 40px;
+            }
+            #instruction-button{
+                font-size: 18px;
+                padding: 12px 20px;
+            }
+        }
     </style>
 </head>
 <body>
