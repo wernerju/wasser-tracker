@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wasser-Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        main {
+            padding: 20px;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        footer {
+            background-color: #e0e0e0;
+            color: #555;
+            padding: 10px;
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.8em;
+        }
+
+        #month-year-select {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        #month-select, #year-select {
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+        #calendar .day {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+            background-color: #f7f7f7;
+            border-radius: 5px;
+            display: flex; /* Make calendar cells flex containers */
+            flex-direction: column; /* Stack items vertically */
+            align-items: center; /* Center items horizontally */
+        }
+
+        #calendar .day.header {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .input-container label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .input-container select {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 200px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #evaluation {
+            text-align: center;
+            background-color: #e3e3e3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #evaluation h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        #evaluation p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        #evaluation .highlight {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        #instruction-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        #instruction-popup h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        #instruction-popup p {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        #instruction-popup button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        #instruction-popup button:hover {
+                background-color: #45a049;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            #calendar {
+                max-width: 100%;
+            }
+            .input-container select {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Wasser-Tracker</h1>
+        <div id="month-year-select">
+            <select id="month-select">
+                <option value="0">Januar</option>
+                <option value="1">Februar</option>
+                <option value="2">März</option>
+                <option value="3">April</option>
+                <option value="4">Mai</option>
+                <option value="5">Juni</option>
+                <option value="6">Juli</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">Oktober</option>
+                <option value="10">November</option>
+                <option value="11">Dezember</option>
+            </select>
+            <select id="year-select">
+            </select>
+        </div>
+        <button id="instruction-button">Anleitung</button>
+    </header>
+    <main>
+        <div id="calendar">
+        </div>
+        <div id="evaluation" class="hidden">
+            <h2>Monatsauswertung</h2>
+            <p>Durchschnittliche tägliche Aufnahme: <span id="average-intake"></span> Gläser</p>
+            <p>Ziel (mindestens <span id="target-intake">5</span> Gläser pro Tag): <span id="goal-met"></span></p>
+            <p id="reward-message" class="hidden">Herzlichen Glückwunsch! Feiern Sie Ihre gute Gewohnheit mit einer Belohnung!</p>
+        </div>
+        <div id="instruction-popup" class="hidden">
+            <h2>Anleitung</h2>
+            <p>Wählen Sie den Monat und das Jahr.  Geben Sie täglich Ihre Wasseraufnahme ein.</p>
+            <p>Am Ende des Monats erhalten Sie eine Auswertung.</p>
+            <button id="close-instruction">Schließen</button>
+        </div>
+    </main>
+    <footer>
+        <p>© 2024 Wasser-Tracker. Alle Rechte vorbehalten.  <a>Datenschutzbestimmungen</a></p>
+    </footer>
+    <script>
+        const monthSelect = document.getElementById("month-select");
+        const yearSelect = document.getElementById("year-select");
+        const calendarDiv = document.getElementById("calendar");
+        const evaluationDiv = document.getElementById("evaluation");
+        const averageIntakeDisplay = document.getElementById("average-intake");
+        const goalMetDisplay = document.getElementById("goal-met");
+        const rewardMessage = document.getElementById("reward-message");
+        const instructionButton = document.getElementById("instruction-button");
+        const instructionPopup = document.getElementById("instruction-popup");
+        const closeInstructionButton = document.getElementById("close-instruction");
+        const targetIntake = 5; // Zielwert auf 5 Gläser setzen
+
+        // Array für Monatsnamen
+        const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+
+        // Funktion zur Befüllung des Jahres-Dropdown-Menüs
+        function populateYearSelect() {
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear; i <= currentYear + 1; i++) { // Aktuelles Jahr + 1
+                let option = document.createElement("option");
+                option.value = i;
+                option.textContent = i;
+                yearSelect.appendChild(option);
+            }
+            yearSelect.value = currentYear; // Setze das aktuelle Jahr als Standardwert
+        }
+        populateYearSelect();
+
+        // Funktion zur Erstellung des Kalenders
+        function createCalendar(month, year) {
+            calendarDiv.innerHTML = ""; // Kalenderinhalt löschen
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Wochentage als Kopfzeile, Start mit Montag
+            const daysOfWeek = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+            for (let dayName of daysOfWeek) {
+                let dayHeader = document.createElement("div");
+                dayHeader.className = "day header";
+                dayHeader.textContent = dayName;
+                calendarDiv.appendChild(dayHeader);
+            }
+
+            // Leere Zellen für die Tage vor dem ersten Tag des Monats
+            let dayOffset = (firstDay === 0) ? 6 : firstDay - 1; //Anpassung für Montag Start
+            for (let i = 0; i < dayOffset; i++) {
+                let emptyCell = document.createElement("div");
+                calendarDiv.appendChild(emptyCell);
+            }
+
+            // Zellen für die Tage des Monats
+            for (let day = 1; day <= daysInMonth; day++) {
+                let dayCell = document.createElement("div");
+                dayCell.className = "day";
+                dayCell.textContent = day;
+                dayCell.id = `${year}-${month}-${day}`; // Eindeutige ID für jeden Tag
+                calendarDiv.appendChild(dayCell);
+                // Füge das Dropdown-Menü für die Wassermenge zu jedem Tag hinzu
+                const waterSelect = document.createElement("select");
+                waterSelect.id = `water-intake-${year}-${month}-${day}`;
+                for (let i = 0; i <= 10; i++) {
+                    let option = document.createElement("option");
+                    option.value = i;
+                    option.textContent = i;
+                    waterSelect.appendChild(option);
+                }
+                waterSelect.addEventListener("change", () => saveData(year, month, day)); //Speichern
+                dayCell.appendChild(waterSelect);
+            }
+            loadSavedData(month, year); // Daten laden, wenn der Kalender gezeichnet wird
+        }
+
+        // Funktion zum Speichern der Daten
+        function saveData(year, month, day) {
+            const waterSelect = document.getElementById(`water-intake-${year}-${month}-${day}`);
+            if (!waterSelect) return;
+            const waterIntake = parseInt(waterSelect.value);
+            localStorage.setItem(`${year}-${month}-${day}`, waterIntake);
+            calculateAverage(month, year);
+        }
+
+        //Funktion zum Laden der Daten
+        function loadSavedData(month, year) {
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const waterSelect = document.getElementById(`water-intake-${year}-${month}-${day}`);
+                if (!waterSelect) continue;
+                const savedIntake = localStorage.getItem(`${year}-${month}-${day}`);
+                if (savedIntake !== null) {
+                    waterSelect.value = savedIntake;
+                }
+            }
+            calculateAverage(month, year);
+        }
+
+        // Funktion zur Berechnung des Durchschnitts und Anzeige der Auswertung
+        function calculateAverage(month, year) {
+            let totalIntake = 0;
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); // Gesamtzahl der Tage im Monat.
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const intake = localStorage.getItem(`${year}-${month}-${day}`);
+                if (intake !== null) {
+                    totalIntake += parseInt(intake);
+                }
+            }
+            let averageIntake =  daysInMonth > 0 ? (totalIntake / daysInMonth).toFixed(1) : 0;
+            averageIntakeDisplay.textContent = averageIntake;
+            evaluationDiv.classList.remove("hidden");
+
+            if (averageIntake >= targetIntake) {
+                goalMetDisplay.textContent = "Ziel erreicht!";
+                rewardMessage.classList.remove("hidden");
+            } else {
+                goalMetDisplay.textContent = "Ziel nicht erreicht.";
+                rewardMessage.classList.add("hidden");
+            }
+        }
+
+        // Event Listener für die Monats- und Jahresauswahl
+        monthSelect.addEventListener("change", () => {
+            const selectedMonth = parseInt(monthSelect.value);
+            const selectedYear = parseInt(yearSelect.value);
+            createCalendar(selectedMonth, selectedYear);
+        });
+
+        yearSelect.addEventListener("change", () => {
+            const selectedMonth = parseInt(monthSelect.value);
+            const selectedYear = parseInt(yearSelect.value);
+            createCalendar(selectedMonth, selectedYear);
+        });
+
+        // Event Listener für den Anleitungs-Button
+        instructionButton.addEventListener("click", () => {
+            instructionPopup.classList.remove("hidden");
+        });
+
+        // Event Listener für den Schließen-Button im Anleitungs-Pop-up
+        closeInstructionButton.addEventListener("click", () => {
+            instructionPopup.classList.add("hidden");
+        });
+
+        // Initialen Kalender erstellen
+        const initialMonth = parseInt(monthSelect.value);
+        const initialYear = parseInt(yearSelect.value);
+        createCalendar(initialMonth, initialYear);
+    </script>
+</body>
+</html>
